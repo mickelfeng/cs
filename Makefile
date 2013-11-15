@@ -12,6 +12,7 @@ CFLAGS = -I$(inc_d) $(DFLAGS)
 $(app): $(obj)
 	$(CC) $^ -o $@
 
+# FIXME
 #cs_server.o: $(inc_d)/*.h
 
 %.o: %.c
