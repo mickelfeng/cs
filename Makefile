@@ -12,8 +12,16 @@ CFLAGS = -I$(inc_d) $(DFLAGS)
 $(app): $(obj)
 	$(CC) $^ -o $@
 
-# FIXME
-#cs_server.o: $(inc_d)/*.h
+
+sinclude $(src:.c=.d)
+
+%.d: %.c
+	@set -e; \
+    rm -f $@; \
+    $(CC) -MM $(CFLAGS) $< > $@.$$$$; \
+    sed 's,\($*\)\.o[:]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
+    rm -f $@.$$$$
+
 
 %.o: %.c
 	$(CC) -c $< -o $@ $(CFLAGS)
