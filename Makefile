@@ -27,5 +27,6 @@ sinclude $(src:.c=.d)
 	$(CC) -c $< -o $@ $(CFLAGS)
 
 
+.PHONY: clean
 clean:
-	-rm $(src_d)/*.o $(app)
+	-rm $(src_d)/*.o $(src_d)/*.d $(app)
