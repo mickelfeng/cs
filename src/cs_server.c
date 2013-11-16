@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
 					sizeof(str)),
 				ntohs(peer_addr.sin_port));
 
+		// FIXME: why server exit when client ctrl-c
 		while (1) {
 			s = read(peer_sockfd, buf, buflen);
 			if (s == -1) {
