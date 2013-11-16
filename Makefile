@@ -13,6 +13,7 @@ $(app): $(obj)
 	$(CC) $^ -o $@
 
 
+ifneq ($(MAKECMDGOALS), clean)
 sinclude $(src:.c=.d)
 
 %.d: %.c
@@ -21,6 +22,7 @@ sinclude $(src:.c=.d)
 	$(CC) -MM $(CFLAGS) $< > $@.$$$$; \
 	sed 's,\($*\)\.o[:]*,\1.o $@ : ,g' < $@.$$$$ > $@; \
 	rm -f $@.$$$$
+endif
 
 
 %.o: %.c
