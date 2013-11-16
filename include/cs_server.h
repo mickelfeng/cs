@@ -6,6 +6,8 @@
 #define _CS_SERVER_H_INCLUDED_
 
 
+#include <sqlite3.h>
+
 #include "cs_debug.h"
 
 
