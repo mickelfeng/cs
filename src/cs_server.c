@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
 
 	int peer_sockfd = -1;
 	ssize_t s = 0;
+	char str[INET_ADDRSTRLEN];
 	while (1) {
 		peer_sockfd = accept(sockfd,
 				(struct sockaddr *)&peer_addr, &peer_addrlen);
@@ -69,30 +70,30 @@ int main(int argc, char *argv[])
 			cs_free(&buf);
 			return -1;
 		}
+		D("received from %s at PORT %d",
+				inet_ntop(AF_INET, &peer_addr.sin_addr, str,
+					sizeof(str)),
+				ntohs(peer_addr.sin_port));
 
-#if 0
-		s = read(sockfd, buf, buflen);
-		if (s == -1) {
-			E("%s", strerror(errno));
-			cs_free(&buf);
-			return -1;
+		while (1) {
+			s = read(peer_sockfd, buf, buflen);
+			if (s == -1) {
+				E("%s", strerror(errno));
+				cs_free(&buf);
+				return -1;
+			}
+			DS(buf);
+			memset(buf, '\0', buflen);
+
+			strncpy(buf, "hello", 5);
+			s = write(peer_sockfd, buf, strlen(buf));
+			if (s == -1) {
+				E("%s", strerror(errno));
+				cs_free(&buf);
+				return -1;
+			}
+			memset(buf, '\0', buflen);
 		}
-
-		DS(buf);
-#endif
-
-#if 1
-		strncpy(buf, "hi\n", 3);
-
-		s = write(peer_sockfd, buf, strlen(buf));
-		if (s == -1) {
-			E("%s", strerror(errno));
-			cs_free(&buf);
-			return -1;
-		}
-#endif
-
-		memset(buf, '\0', buflen);
 	}
 
 	cs_free(&buf);
