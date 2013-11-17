@@ -183,11 +183,11 @@ int main(int argc, char *argv[])
 			memset(buf, '\0', buflen);
 
 			s = read(peer_sockfd, buf, buflen);
-			if (s == -1) {
-				E("%s", strerror(errno));
+			DS(buf);
+			if (s == -1 || strlen(buf) == 0) {
+				//E("%s", strerror(errno));
 				break;
 			}
-			DS(buf);
 
 			/* check username & passwd */
 			cs_request_t req = cs_parse_request(buf);
@@ -200,11 +200,13 @@ int main(int argc, char *argv[])
 			request_dump(&req);
 
 			memset(query_line, '\0', query_len_max);
-			sprintf(query_line, "select * from user where name='tom' and passwd='%s'", req.passwd);
+			sprintf(query_line, "select * from user where name='tom' and passwd='tom'");//, req.passwd);
 			DS(query_line);
 
+			// FIXME: how to judge select is ok
 			ret = sqlite3_exec(db, query_line, sql_check_identity_cb, NULL, NULL);
-			if (ret == SQLITE_ABORT) {
+			//if (ret == SQLITE_ABORT) {
+			if (ret != SQLITE_OK) {
 				E("sqlite3_exec() failed.");
 				break;
 			}
@@ -221,7 +223,9 @@ int main(int argc, char *argv[])
 			buddy.len = strlen(buf);
 
 			ret = sqlite3_exec(db, query_line, sql_get_buddy_cb, &buddy, NULL);
-			if (ret == SQLITE_ABORT) {
+			DD(ret);
+			//if (ret == SQLITE_ABORT) {
+			if (ret != SQLITE_OK) {
 				E("sqlite3_exec() failed.");
 				break;
 			}
