@@ -55,6 +55,7 @@ cs_request_t cs_parse_request(char *buf)
 		switch (i) {
 			case 0:
 				req.name = token;
+				//DVBUF(strlen(req.name), req.name);
 				break;
 			case 1:
 				req.passwd = token;
@@ -76,10 +77,26 @@ cs_request_t cs_parse_request(char *buf)
 		str = NULL;
 		i++;
 	}
-	request_dump(&req);
+	//request_dump(&req);
 
 	cs_free(&buf_copy);
 	return req;
+}
+
+int sql_check_identity_cb(void *p, int argc, char **value, char **name)
+{
+	*(int *)p = argc;
+	return 0;
+}
+
+int sql_get_buddy_cb(void *p, int argc, char **value, char **name)
+{
+	cs_str_t *buddy = (cs_str_t *)p;
+
+	sprintf(buddy->data + buddy->len, ":%s-%s", value[1], value[2]);
+	buddy->len = strlen(buddy->data);
+
+	return 0;
 }
 
 int main(int argc, char *argv[])
@@ -130,6 +147,8 @@ int main(int argc, char *argv[])
 		E("sqlite3_open() failed.");
 		return -1;
 	}
+	int query_len_max = 512;
+	char *query_line = (char *)cs_malloc(sizeof(char) * query_len_max);
 
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addrlen = sizeof(peer_addr);
@@ -161,24 +180,59 @@ int main(int argc, char *argv[])
 
 		// FIXME: why server exit when client ctrl-c
 		while (1) {
+			memset(buf, '\0', buflen);
+
 			s = read(peer_sockfd, buf, buflen);
 			if (s == -1) {
 				E("%s", strerror(errno));
-				cs_free(&buf);
-				return -1;
+				break;
 			}
 			DS(buf);
-			cs_parse_request(buf);
-			memset(buf, '\0', buflen);
 
-			strncpy(buf, "hello", 5);
+			/* check username & passwd */
+			cs_request_t req = cs_parse_request(buf);
+			if (req.name == NULL) {
+				E("cs_parse_request() failed.");
+				break;
+			}
+			// FIXME: why req.name si empty
+			//DVBUF(strlen(req.name), req.name);
+			request_dump(&req);
+
+			memset(query_line, '\0', query_len_max);
+			sprintf(query_line, "select * from user where name='tom' and passwd='%s'", req.passwd);
+			DS(query_line);
+
+			ret = sqlite3_exec(db, query_line, sql_check_identity_cb, NULL, NULL);
+			if (ret == SQLITE_ABORT) {
+				E("sqlite3_exec() failed.");
+				break;
+			}
+
+			memset(buf, '\0', buflen);
+			memset(query_line, '\0', query_len_max);
+
+			/* get buddy name list */
+			sprintf(query_line, "select * from troy");
+			DS(query_line);
+
+			cs_str_t buddy;
+			buddy.data = buf;
+			buddy.len = strlen(buf);
+
+			ret = sqlite3_exec(db, query_line, sql_get_buddy_cb, &buddy, NULL);
+			if (ret == SQLITE_ABORT) {
+				E("sqlite3_exec() failed.");
+				break;
+			}
+			DDSTR(buddy);
+
+			//strncpy(buf, "hello", 5);
 			s = write(peer_sockfd, buf, strlen(buf));
 			if (s == -1) {
 				E("%s", strerror(errno));
-				cs_free(&buf);
-				return -1;
+				break;
 			}
-			memset(buf, '\0', buflen);
 		}
 	}
 
@@ -193,7 +247,7 @@ int main(int argc, char *argv[])
 #if 0
 	rscallback();
 	sqlite3_open();
-	sqlite3_exec(); /* check username & passwd */
+	sqlite3_exec(); 
 	sqlite3_close();
 
 	void FD_CLR(int fd, fd_set *set);

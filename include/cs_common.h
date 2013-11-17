@@ -35,6 +35,12 @@
 #include <pthread.h> // -lpthread
 
 
+typedef struct {
+	char *data;
+	int len;
+} cs_str_t;
+
+
 /* memory */
 void *cs_malloc(size_t s);
 void *cs_realloc(void *p, size_t s);
