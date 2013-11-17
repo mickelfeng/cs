@@ -5,6 +5,83 @@
 #include "cs_server.h"
 
 
+void request_init(cs_request_t *req)
+{
+	req->name = NULL;
+	req->passwd = NULL;
+	req->datetime = NULL;
+	req->buddy_name = NULL;
+	req->content = NULL;
+	req->req_type = -1;
+}
+
+void request_dump(cs_request_t *req)
+{
+	D("***********************************");
+	DSIF(req->name);
+	DSIF(req->passwd);
+	DSIF(req->datetime);
+	DSIF(req->buddy_name);
+	DSIF(req->content);
+	DD(req->req_type);
+	D("***********************************");
+}
+
+cs_request_t cs_parse_request(char *buf)
+{
+	cs_request_t req;
+	request_init(&req);
+
+	if (buf == NULL) {
+		E("parameter error.");
+		return req;
+	}
+
+	char *buf_copy = strdup(buf);
+	if (buf_copy == NULL) {
+		E("strncup() failed.");
+		return req;
+	}
+
+	char *str = buf_copy;
+	char *token = NULL;
+	char *saveptr = NULL;
+	int i = 0;
+	while (1) {
+		token = strtok_r(str, ":", &saveptr);
+		if (token == NULL)
+			break;
+
+		switch (i) {
+			case 0:
+				req.name = token;
+				break;
+			case 1:
+				req.passwd = token;
+				break;
+			case 2:
+				req.datetime = token;
+				break;
+			case 3:
+				req.buddy_name = token;
+				break;
+			case 4:
+				req.content = token;
+				break;
+			default:
+				DD(i);
+				break;
+		}
+
+		str = NULL;
+		i++;
+	}
+	request_dump(&req);
+
+	cs_free(&buf_copy);
+	return req;
+}
+
 int main(int argc, char *argv[])
 {
 	D("hello world.");
@@ -47,6 +124,13 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	sqlite3 *db;
+	ret = sqlite3_open("./cs_user.db", &db);
+	if (ret != SQLITE_OK) {
+		E("sqlite3_open() failed.");
+		return -1;
+	}
+
 	struct sockaddr_in peer_addr;
 	socklen_t peer_addrlen = sizeof(peer_addr);
 
@@ -84,6 +168,7 @@ int main(int argc, char *argv[])
 				return -1;
 			}
 			DS(buf);
+			cs_parse_request(buf);
 			memset(buf, '\0', buflen);
 
 			strncpy(buf, "hello", 5);
@@ -98,7 +183,7 @@ int main(int argc, char *argv[])
 	}
 
 	cs_free(&buf);
-
+	sqlite3_close(db);
 	ret = close(sockfd);
 	if (ret == -1) {
 		E("%s", strerror(errno));

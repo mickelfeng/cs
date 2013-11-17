@@ -59,6 +59,10 @@ typedef char bool;
 #define DS(x)       D(#x"=%s", (char *)(x))
 #define DP(x)       D(#x"=%p", x)
 
+#define DSIF(x) { \
+	if (x != NULL) { D(#x"=%s", (char *)(x)); }\
+	else { DP(x); } }
+
 #define DF(x)       D(#x"=%f", x)
 #define DLF(x)      D(#x"=%lf", x) /* double */
 

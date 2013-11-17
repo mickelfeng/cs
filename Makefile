@@ -5,12 +5,12 @@ src = $(wildcard $(src_d)/*.c)
 obj = $(patsubst %.c, %.o, $(src))
 
 CC = gcc
-DFLAGS = -Wall -g -DDEBUG
+DFLAGS = -Wall -g -DDEBUG -lsqlite3
 CFLAGS = -I$(inc_d) $(DFLAGS)
 
 
 $(app): $(obj)
-	$(CC) $^ -o $@
+	$(CC) $^ -o $@ $(CFLAGS)
 
 
 ifneq ($(MAKECMDGOALS), clean)
