@@ -55,7 +55,6 @@ cs_request_t cs_parse_request(char *buf)
 		switch (i) {
 			case 0:
 				req.name = token;
-				//DVBUF(strlen(req.name), req.name);
 				break;
 			case 1:
 				req.passwd = token;
@@ -195,15 +194,14 @@ int main(int argc, char *argv[])
 				E("cs_parse_request() failed.");
 				break;
 			}
-			// FIXME: why req.name si empty
-			//DVBUF(strlen(req.name), req.name);
+			// FIXME: why req.name is empty : to L81 cs_free(&buf_copy);
 			request_dump(&req);
 
 			memset(query_line, '\0', query_len_max);
 			sprintf(query_line, "select * from user where name='tom' and passwd='tom'");//, req.passwd);
 			DS(query_line);
 
-			// FIXME: how to judge select is ok
+			// FIXME: how to judge select is ok : count call callback function of time
 			ret = sqlite3_exec(db, query_line, sql_check_identity_cb, NULL, NULL);
 			//if (ret == SQLITE_ABORT) {
 			if (ret != SQLITE_OK) {
