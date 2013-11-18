@@ -183,11 +183,11 @@ int main(int argc, char *argv[])
 			memset(buf, '\0', buflen);
 
 			s = read(peer_sockfd, buf, buflen);
-			DS(buf);
 			if (s == -1 || strlen(buf) == 0) {
 				//E("%s", strerror(errno));
 				break;
 			}
+			DS(buf);
 
 			/* check username & passwd */
 			cs_request_t req = cs_parse_request(buf);

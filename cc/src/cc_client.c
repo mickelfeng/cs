@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 		DS(buf);
 		memset(buf, '\0', buflen);
 
-		sleep(1);
+		//sleep(1);
 	//}
 
 	cs_free(&buf);
